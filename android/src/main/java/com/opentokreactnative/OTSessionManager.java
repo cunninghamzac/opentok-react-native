@@ -6,7 +6,7 @@ package com.opentokreactnative;
 
 import android.util.Log;
 import android.widget.FrameLayout;
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
@@ -60,7 +60,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     private final String subscriberPreface = "subscriber:";
     private Boolean logLevel = false;
     public OTRN sharedState;
-    private static PublisherBuilderConfigurer publisherBuilderConfigurer;
+    private static PublisherBuilderConfig publisherBuilderConfig;
 
     public OTSessionManager(ReactApplicationContext reactContext) {
 
@@ -68,8 +68,8 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         sharedState = OTRN.getSharedState();
     }
 
-    public static void setPublisherBuilderConfigurer(PublisherBuilderConfigurer configurer) {
-        publisherBuilderConfigurer = configurer;
+    public static void setPublisherBuilderConfig(PublisherBuilderConfig configurer) {
+        publisherBuilderConfig = configurer;
     }
 
     @ReactMethod
@@ -174,9 +174,9 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     }
 
     private Publisher buildPublisher(ReadableMap properties, Publisher.Builder builder) {
-        PublisherBuilderConfigurer configurer = publisherBuilderConfigurer;
-        if (configurer != null) {
-            configurer.configure(properties, builder);
+        PublisherBuilderConfig config = publisherBuilderConfig;
+        if (config != null) {
+            config.configure(properties, builder);
         }
         return builder.build();
     }
@@ -903,7 +903,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         printLogs("onStreamVideoTypeChanged");
     }
 
-    public interface PublisherBuilderConfigurer
+    public interface PublisherBuilderConfig
     {
         void configure(ReadableMap properties, Publisher.Builder builder);
     }
