@@ -6,7 +6,7 @@ package com.opentokreactnative;
 
 import android.util.Log;
 import android.widget.FrameLayout;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.view.View;
 
 import com.facebook.react.bridge.Arguments;
@@ -60,11 +60,16 @@ public class OTSessionManager extends ReactContextBaseJavaModule
     private final String subscriberPreface = "subscriber:";
     private Boolean logLevel = false;
     public OTRN sharedState;
+    private static PublisherBuilderConfigurer publisherBuilderConfigurer;
 
     public OTSessionManager(ReactApplicationContext reactContext) {
 
         super(reactContext);
         sharedState = OTRN.getSharedState();
+    }
+
+    public static void setPublisherBuilderConfigurer(PublisherBuilderConfigurer configurer) {
+        publisherBuilderConfigurer = configurer;
     }
 
     @ReactMethod
@@ -137,25 +142,23 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         if (videoSource.equals("screen")) {
             View view = getCurrentActivity().getWindow().getDecorView().getRootView();
             OTScreenCapturer capturer = new OTScreenCapturer(view);
-            mPublisher = new Publisher.Builder(this.getReactApplicationContext())
+            mPublisher = buildPublisher(properties, new Publisher.Builder(this.getReactApplicationContext())
                     .audioTrack(audioTrack)
                     .videoTrack(videoTrack)
                     .name(name)
                     .audioBitrate(audioBitrate)
                     .resolution(Publisher.CameraCaptureResolution.valueOf(resolution))
                     .frameRate(Publisher.CameraCaptureFrameRate.valueOf(frameRate))
-                    .capturer(capturer)
-                    .build();
+                    .capturer(capturer));
             mPublisher.setPublisherVideoType(PublisherKit.PublisherKitVideoType.PublisherKitVideoTypeScreen);
         } else {
-            mPublisher = new Publisher.Builder(this.getReactApplicationContext())
+            mPublisher = buildPublisher(properties, new Publisher.Builder(this.getReactApplicationContext())
                     .audioTrack(audioTrack)
                     .videoTrack(videoTrack)
                     .name(name)
                     .audioBitrate(audioBitrate)
                     .resolution(Publisher.CameraCaptureResolution.valueOf(resolution))
-                    .frameRate(Publisher.CameraCaptureFrameRate.valueOf(frameRate))
-                    .build();
+                    .frameRate(Publisher.CameraCaptureFrameRate.valueOf(frameRate)));
             if (cameraPosition.equals("back")) {
                 mPublisher.cycleCamera();
             }
@@ -168,6 +171,14 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         ConcurrentHashMap<String, Publisher> mPublishers = sharedState.getPublishers();
         mPublishers.put(publisherId, mPublisher);
         callback.invoke();
+    }
+
+    private Publisher buildPublisher(ReadableMap properties, Publisher.Builder builder) {
+        PublisherBuilderConfigurer configurer = publisherBuilderConfigurer;
+        if (configurer != null) {
+            configurer.configure(properties, builder);
+        }
+        return builder.build();
     }
 
     @ReactMethod
@@ -892,4 +903,8 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         printLogs("onStreamVideoTypeChanged");
     }
 
+    public interface PublisherBuilderConfigurer
+    {
+        void configure(ReadableMap properties, Publisher.Builder builder);
+    }
 }
