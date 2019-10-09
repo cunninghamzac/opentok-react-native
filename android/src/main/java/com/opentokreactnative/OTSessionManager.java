@@ -903,8 +903,7 @@ public class OTSessionManager extends ReactContextBaseJavaModule
         printLogs("onStreamVideoTypeChanged");
     }
 
-    public interface PublisherBuilderConfig
-    {
+    public interface PublisherBuilderConfig {
         void configure(ReadableMap properties, Publisher.Builder builder);
     }
 }
